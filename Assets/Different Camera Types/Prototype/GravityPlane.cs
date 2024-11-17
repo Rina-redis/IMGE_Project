@@ -26,11 +26,13 @@ public class GravityPlane : GravitySourse
         Gizmos.matrix =
             Matrix4x4.TRS(transform.position, transform.rotation, scale);
 
-        Vector3 size = new Vector3(20f, 0f, 20f);
+        Vector3 size = new Vector3(10f, 0f, 10f);
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireCube(Vector3.zero, new Vector3(20f, 0f, 20f));
+        Gizmos.DrawWireCube(Vector3.zero, new Vector3(10f, 0f, 10f));
+        if(range > 0){
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireCube(Vector3.up, size);
+        }
     }
 
 }
