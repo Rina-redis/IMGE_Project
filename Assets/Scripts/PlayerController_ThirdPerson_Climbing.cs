@@ -46,7 +46,7 @@ public class PlayerController_ThirdPerson_Climbing : MonoBehaviour
     }
 
     void Update()
-    {      
+    {
         grounded = controller.isGrounded;
         if (grounded && playerVelocity.y < 0)
         {
@@ -59,11 +59,11 @@ public class PlayerController_ThirdPerson_Climbing : MonoBehaviour
         move.y = 0;
         controller.Move(move * Time.deltaTime * playerSpeed);
 
-     
+
         // Makes the player jump
         if (jumpControlls.action.triggered && grounded)
         {
-              playerVelocity.y += Mathf.Sqrt(jumpHeight * -2.0f * gravityValue);
+            playerVelocity.y += Mathf.Sqrt(jumpHeight * -2.0f * gravityValue);
         }
 
         playerVelocity.y += gravityValue * Time.deltaTime;
@@ -75,5 +75,11 @@ public class PlayerController_ThirdPerson_Climbing : MonoBehaviour
             Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
             transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
         }
+    }
+
+    public void jump()// it is so bad
+    {
+        playerVelocity.y = 0;
+        playerVelocity.y += Mathf.Sqrt(jumpHeight / 2 * -2.0f * gravityValue);
     }
 }

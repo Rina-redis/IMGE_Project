@@ -90,6 +90,7 @@ public class Climbing : MonoBehaviour
     private void StopClimbing()
     {
         climbing = false;
+        pm.jump();
     }
 
     private void OnDrawGizmos()
