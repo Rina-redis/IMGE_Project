@@ -26,11 +26,14 @@ public class Climbing : MonoBehaviour
     private RaycastHit frontWallHit;
     public bool wallFront;
 
+    Vector3 upVektor = new Vector3(0, 0.1f, 0);
+    Vector3 move = Vector3.zero;
+
     private void Update()
     {
         WallCheck();
         StateMachine();
-        Debug.DrawRay(transform.position, orientation.forward * detectionLength, Color.red);
+        Debug.DrawRay(orientation.position, orientation.forward * detectionLength, Color.red);
 
         if (climbing) ClimbingMovement(); //&& !exitingWall
     }
@@ -57,8 +60,8 @@ public class Climbing : MonoBehaviour
     }
 
     private void WallCheck()
-    {
-        wallFront = Physics.SphereCast(transform.position, sphereCastRadius, orientation.forward, out frontWallHit, detectionLength , whatIsWall);
+    {                                   //transform
+        wallFront = Physics.SphereCast(orientation.position, sphereCastRadius, orientation.forward, out frontWallHit, detectionLength, whatIsWall);
 
         wallLookAngle = Vector3.Angle(orientation.forward, -frontWallHit.normal);
 
@@ -71,18 +74,17 @@ public class Climbing : MonoBehaviour
     private void StartClimbing()
     {
         climbing = true;
+        move = Vector3.zero;
     }
 
     private void ClimbingMovement()
     {
-   //     rb.linearVelocity = new Vector3(rb.linearVelocity.x, climbSpeed, rb.linearVelocity.z);
-       
-        Vector3 move = new Vector3(0,1,0);
+
+        move += upVektor;
         pm.controller.Move(move * Time.deltaTime * climbSpeed);
 
         Debug.LogWarning("dddddddddddddd");
 
-        // Idea - sound effect
     }
 
     private void StopClimbing()
