@@ -1,18 +1,17 @@
-using System;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerController : MonoBehaviour
+public class PlayerController_ThirdPerson_Climbing : MonoBehaviour
 {
     [SerializeField]
     private InputActionReference movementControlls;
     [SerializeField]
     private InputActionReference jumpControlls;
-    private CharacterController controller;
+    public CharacterController controller;
     private Vector3 playerVelocity;
-    private bool groundedPlayer;
+    public bool grounded;
     [SerializeField]
     private Transform cameraMainTransform;
 
@@ -26,7 +25,7 @@ public class PlayerController : MonoBehaviour
     private float jumpHeight = 1.0f;
     [SerializeField]
 
-    //private float gravityValue = -9.81f;
+    private float gravityValue = -9.81f;
 
     public void OnEnable()
     {
@@ -47,12 +46,9 @@ public class PlayerController : MonoBehaviour
     }
 
     void Update()
-    {
-       // var gravity = CustomGravityManager.GetGravity(transform.position);
-       var gravity = new Vector3 (1,1,1);
-        playerVelocity += gravity * Time.deltaTime;
-        groundedPlayer = controller.isGrounded;
-        if (groundedPlayer && playerVelocity.y < 0)
+    {      
+        grounded = controller.isGrounded;
+        if (grounded && playerVelocity.y < 0)
         {
             playerVelocity.y = 0f;
         }
@@ -63,14 +59,14 @@ public class PlayerController : MonoBehaviour
         move.y = 0;
         controller.Move(move * Time.deltaTime * playerSpeed);
 
-        
+     
         // Makes the player jump
-        if (jumpControlls.action.triggered && groundedPlayer)
+        if (jumpControlls.action.triggered && grounded)
         {
-            Jump(gravity);
+              playerVelocity.y += Mathf.Sqrt(jumpHeight * -2.0f * gravityValue);
         }
 
-        playerVelocity.y += gravity.magnitude * Time.deltaTime;
+        playerVelocity.y += gravityValue * Time.deltaTime;
         controller.Move(playerVelocity * Time.deltaTime);
 
         if (movement != Vector2.zero)
@@ -80,11 +76,4 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
         }
     }
-
-    void Jump(Vector3 gravity){
-        float jumpSpeed = (float) Math.Sqrt(2f * gravity.magnitude * jumpHeight);
-        Vector3 jumpDir = (transform.up).normalized;
-        playerVelocity.y += Mathf.Sqrt(jumpHeight * 2.0f * gravity.magnitude);
-    }
-
 }

@@ -7,7 +7,7 @@ public class Climbing : MonoBehaviour
     [Header("References")]
     public Transform orientation;
     public Rigidbody rb;
-    // public PlayerController pm;
+    public PlayerController_ThirdPerson_Climbing pm;
     public LayerMask whatIsWall;
 
     [Header("Climbing")]
@@ -17,121 +17,110 @@ public class Climbing : MonoBehaviour
 
     private bool climbing;
 
-    [Header("ClimbJumping")]
-    public float climbJumpUpForce;
-    public float climbJumpBackForce;
-
-    public KeyCode jumpKey = KeyCode.Space;
-    public int climbJumps;
-    private int climbJumpsLeft;
-
     [Header("Detection")]
     public float detectionLength;
     public float sphereCastRadius;
     public float maxWallLookAngle;
-    private float wallLookAngle;
+    public float wallLookAngle;
 
     private RaycastHit frontWallHit;
-    private bool wallFront;
-
-    private Transform lastWall;
-    private Vector3 lastWallNormal;
-    public float minWallNormalAngleChange;
-
-    [Header("Exiting")]
-    public bool exitingWall;
-    public float exitWallTime;
-    private float exitWallTimer;
+    public bool wallFront;
 
     private void Update()
     {
         WallCheck();
         StateMachine();
+        Debug.DrawRay(transform.position, orientation.forward * detectionLength, Color.red);
 
-        if (climbing && !exitingWall) ClimbingMovement();
+        if (climbing) ClimbingMovement(); //&& !exitingWall
     }
 
     private void StateMachine()
     {
         // State 1 - Climbing
-        if (wallFront && Input.GetKey(KeyCode.W) && wallLookAngle < maxWallLookAngle && !exitingWall)
+        if (wallFront && Input.GetKey(KeyCode.W) && wallLookAngle < maxWallLookAngle)  //&& !exitingWall) 
         {
+            Debug.Log("Cliiiimb");
             if (!climbing && climbTimer > 0) StartClimbing();
 
-            // timer
+            // Timer
             if (climbTimer > 0) climbTimer -= Time.deltaTime;
             if (climbTimer < 0) StopClimbing();
         }
-
-        // State 2 - Exiting
-        else if (exitingWall)
-        {
-            if (climbing) StopClimbing();
-
-            if (exitWallTimer > 0) exitWallTimer -= Time.deltaTime;
-            if (exitWallTimer < 0) exitingWall = false;
-        }
-
         // State 3 - None
         else
         {
             if (climbing) StopClimbing();
         }
 
-        if (wallFront && Input.GetKeyDown(jumpKey) && climbJumpsLeft > 0) ClimbJump();
+        // if (wallFront && Input.GetKeyDown(jumpKey) && climbJumpsLeft > 0) ClimbJump();
     }
 
     private void WallCheck()
     {
-        wallFront = Physics.SphereCast(transform.position, sphereCastRadius, orientation.forward, out frontWallHit, detectionLength, whatIsWall);
+        wallFront = Physics.SphereCast(transform.position, sphereCastRadius, orientation.forward, out frontWallHit, detectionLength , whatIsWall);
+
         wallLookAngle = Vector3.Angle(orientation.forward, -frontWallHit.normal);
 
-        bool newWall = frontWallHit.transform != lastWall || Mathf.Abs(Vector3.Angle(lastWallNormal, frontWallHit.normal)) > minWallNormalAngleChange;
-
-        if ((wallFront && newWall)) //|| pm.grounded)
+        if (pm.grounded)
         {
             climbTimer = maxClimbTime;
-            climbJumpsLeft = climbJumps;
         }
     }
 
     private void StartClimbing()
     {
         climbing = true;
-        // pm.climbing = true;
-
-        lastWall = frontWallHit.transform;
-        lastWallNormal = frontWallHit.normal;
-
-        /// idea - camera fov change
     }
 
     private void ClimbingMovement()
     {
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, climbSpeed, rb.linearVelocity.z);
+   //     rb.linearVelocity = new Vector3(rb.linearVelocity.x, climbSpeed, rb.linearVelocity.z);
+       
+        Vector3 move = new Vector3(0,1,0);
+        pm.controller.Move(move * Time.deltaTime * climbSpeed);
 
-        /// idea - sound effect
+        Debug.LogWarning("dddddddddddddd");
+
+        // Idea - sound effect
     }
 
     private void StopClimbing()
     {
         climbing = false;
-        //  pm.climbing = false;
-
-        /// idea - particle effect
-        /// idea - sound effect
     }
 
-    private void ClimbJump()
+    private void OnDrawGizmos()
     {
-        exitingWall = true;
-        exitWallTimer = exitWallTime;
+        Gizmos.color = Color.red;
 
-        Vector3 forceToApply = transform.up * climbJumpUpForce + frontWallHit.normal * climbJumpBackForce;
+        // Calculate the start and end positions of the sphere cast
+        Vector3 startPosition = transform.position;
+        Vector3 endPosition = startPosition + orientation.forward * detectionLength;
 
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        rb.AddForce(forceToApply, ForceMode.Impulse);
+        // Draw the starting and ending spheres
+        Gizmos.DrawWireSphere(startPosition, sphereCastRadius);
+        Gizmos.DrawWireSphere(endPosition, sphereCastRadius);
 
-        climbJumpsLeft--;
+        // Calculate directions perpendicular to the cast direction
+        Vector3 up = orientation.up * sphereCastRadius;
+        Vector3 right = orientation.right * sphereCastRadius;
+
+        // Draw lines between the spheres to represent the sides of the capsule
+        Gizmos.DrawLine(startPosition + up, endPosition + up);
+        Gizmos.DrawLine(startPosition - up, endPosition - up);
+        Gizmos.DrawLine(startPosition + right, endPosition + right);
+        Gizmos.DrawLine(startPosition - right, endPosition - right);
+
+        // Optionally, draw more lines for a better approximation
+        Vector3 upRight = (up + right).normalized * sphereCastRadius;
+        Vector3 upLeft = (up - right).normalized * sphereCastRadius;
+        Vector3 downRight = (-up + right).normalized * sphereCastRadius;
+        Vector3 downLeft = (-up - right).normalized * sphereCastRadius;
+
+        Gizmos.DrawLine(startPosition + upRight, endPosition + upRight);
+        Gizmos.DrawLine(startPosition + upLeft, endPosition + upLeft);
+        Gizmos.DrawLine(startPosition + downRight, endPosition + downRight);
+        Gizmos.DrawLine(startPosition + downLeft, endPosition + downLeft);
     }
 }
